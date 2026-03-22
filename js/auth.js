@@ -57,8 +57,8 @@ async function requireAdmin(redirectTo = 'app.html') {
 //  Admins always pass. Regular users need a plan that includes
 //  the app with the given slug.
 //
-async function requireAppAccess(appSlug, redirectTo = 'index.html') {
-  const result = await requireAuth(redirectTo);
+async function requireAppAccess(appSlug, noAccessPage = 'no-access.html') {
+  const result = await requireAuth('index.html');
   if (!result) return null;
 
   const { session, profile } = result;
