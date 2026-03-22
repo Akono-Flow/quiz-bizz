@@ -1,10 +1,14 @@
 // ============================================================
-//  auth.js  v2  –  Shared authentication & access helpers
+//  auth.js  v3  –  Shared authentication & access helpers
+//  Adds single-device session token enforcement.
 //  Depends on: config.js  +  Supabase JS v2 (CDN)
 // ============================================================
 
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// localStorage key where the device token is stored
+const SESSION_TOKEN_KEY = 'sb_device_token';
 
 // ── Get current session + profile ────────────────────────────
 async function getSessionAndProfile() {
@@ -20,19 +24,47 @@ async function getSessionAndProfile() {
   return { session, profile: error ? null : profile };
 }
 
-// ── Guard: must be logged in AND active ──────────────────────
+// ── Guard: must be logged in, active, AND on this device ─────
+//
+//  Three checks in order:
+//  1. Is there a valid Supabase session?        → if not, go to login
+//  2. Is the account active?                    → if not, go to login
+//  3. Does the device token match Supabase?     → if not, sign out
+//     (This is what enforces the one-device rule)
+//
 async function requireAuth(redirectTo = 'index.html') {
   const { session, profile } = await getSessionAndProfile();
 
+  // Check 1 — no session at all
   if (!session) {
     location.href = redirectTo;
     return null;
   }
+
+  // Check 2 — account not active
   if (!profile || !profile.is_active) {
     await sb.auth.signOut();
     location.href = redirectTo + '?reason=inactive';
     return null;
   }
+
+  // Check 3 — device token enforcement
+  // Only runs if the profile has a session_token set.
+  // If session_token is null it means the admin has reset it
+  // and the next login will claim the device freely.
+  if (profile.session_token) {
+    const localToken = localStorage.getItem(SESSION_TOKEN_KEY);
+
+    if (localToken !== profile.session_token) {
+      // This device is not the authorised one.
+      // Sign out of Supabase auth on this device and redirect.
+      await sb.auth.signOut();
+      localStorage.removeItem(SESSION_TOKEN_KEY);
+      location.href = redirectTo + '?reason=session_invalid';
+      return null;
+    }
+  }
+
   return { session, profile };
 }
 
@@ -49,14 +81,6 @@ async function requireAdmin(redirectTo = 'app.html') {
 }
 
 // ── Guard: must have access to a specific app by slug ────────
-//
-//  Usage in any app:
-//    const result = await requireAppAccess('mcq', 'index.html');
-//    if (!result) return;
-//
-//  Admins always pass. Regular users need a plan that includes
-//  the app with the given slug.
-//
 async function requireAppAccess(appSlug, noAccessPage = 'no-access.html') {
   // Not logged in → always send to login page
   const result = await requireAuth('index.html');
@@ -105,6 +129,7 @@ async function requireAppAccess(appSlug, noAccessPage = 'no-access.html') {
 
 // ── Sign out ──────────────────────────────────────────────────
 async function signOut() {
+  localStorage.removeItem(SESSION_TOKEN_KEY);
   await sb.auth.signOut();
   location.href = 'index.html';
 }
