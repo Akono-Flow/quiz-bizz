@@ -315,7 +315,8 @@
                   <th>Plan</th>
                   <th>Role</th>
                   <th>Status</th>
-                  <th>Joined</th>
+                  <th>Session</th>
+                  <th>Last Login</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -500,13 +501,27 @@
     function renderUsers(users) {
       const tbody = document.getElementById('users-tbody');
       if (!users.length) {
-        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No users found.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No users found.</td></tr>';
         return;
       }
       tbody.innerHTML = users.map(u => {
         const planOptions = allPlans.map(p =>
           `<option value="${p.id}" ${u.plan_id === p.id ? 'selected' : ''}>${esc(p.name)}</option>`
         ).join('');
+
+        // Session status — locked means a device token is set
+        const sessionLocked = !!u.session_token;
+        const sessionBadge  = sessionLocked
+          ? `<span class="badge" style="background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.3);color:#fde047;">
+               🔒 Locked
+             </span>`
+          : `<span class="badge" style="background:rgba(118,131,144,.1);border:1px solid var(--border);color:var(--text-muted);">
+               ○ Free
+             </span>`;
+
+        const lastLogin = u.last_login_at
+          ? new Date(u.last_login_at).toLocaleString([], { dateStyle:'short', timeStyle:'short' })
+          : '—';
 
         return `
         <tr>
@@ -529,15 +544,20 @@
               ${u.is_active?'● Active':'○ Inactive'}
             </span>
           </td>
-          <td style="font-size:.8rem;color:var(--text-muted)">
-            ${new Date(u.created_at).toLocaleDateString()}
-          </td>
+          <td>${sessionBadge}</td>
+          <td style="font-size:.78rem;color:var(--text-muted);white-space:nowrap;">${lastLogin}</td>
           <td>
-            <div style="display:flex;gap:.4rem;">
+            <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
               <button class="btn btn-sm ${u.is_active?'btn-danger':'btn-success'}"
                 onclick="confirmToggleUser('${u.id}',${u.is_active},'${esc(u.email)}')">
                 ${u.is_active?'Deactivate':'Activate'}
               </button>
+              ${sessionLocked ? `
+              <button class="btn btn-sm btn-ghost"
+                title="Clears the device lock so this user can log in from a new device"
+                onclick="confirmResetSession('${u.id}','${esc(u.email)}')">
+                ↺ Reset Session
+              </button>` : ''}
             </div>
           </td>
         </tr>`;
@@ -575,6 +595,27 @@
       document.getElementById('confirm-ok').textContent    = cap(action);
       pendingAction = { type: 'toggleUser', userId, value: !current };
       document.getElementById('confirm-overlay').classList.add('show');
+    }
+
+    function confirmResetSession(userId, email) {
+      document.getElementById('confirm-title').textContent = 'Reset Device Session';
+      document.getElementById('confirm-msg').textContent   =
+        `This will clear the device lock for "${email}". They will be able to log in from any device once — and that device will then become the new authorised device. Continue?`;
+      document.getElementById('confirm-ok').className      = 'btn btn-primary';
+      document.getElementById('confirm-ok').textContent    = 'Reset Session';
+      pendingAction = { type: 'resetSession', userId, email };
+      document.getElementById('confirm-overlay').classList.add('show');
+    }
+
+    async function doResetSession(userId) {
+      const { error } = await sb
+        .from('profiles')
+        .update({ session_token: null, updated_at: new Date().toISOString() })
+        .eq('id', userId);
+
+      if (error) { showToast('Reset failed: ' + error.message, 'error'); return; }
+      showToast('Session reset. User can now log in from a new device.', 'success');
+      await loadUsers();
     }
 
     async function doToggleUser(userId, val) {
@@ -950,9 +991,10 @@
       if (!pendingAction) return;
       const a = pendingAction;
       pendingAction = null;
-      if (a.type === 'toggleUser')  await doToggleUser(a.userId, a.value);
-      if (a.type === 'deleteApp')   await doDeleteApp(a.appId);
-      if (a.type === 'deletePlan')  await doDeletePlan(a.planId);
+      if (a.type === 'toggleUser')   await doToggleUser(a.userId, a.value);
+      if (a.type === 'resetSession') await doResetSession(a.userId);
+      if (a.type === 'deleteApp')    await doDeleteApp(a.appId);
+      if (a.type === 'deletePlan')   await doDeletePlan(a.planId);
     }
     function closeConfirm() {
       document.getElementById('confirm-overlay').classList.remove('show');
