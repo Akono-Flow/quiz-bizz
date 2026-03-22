@@ -8,8 +8,7 @@
   <style>
     body {
       display: flex; align-items: center; justify-content: center;
-      min-height: 100vh; overflow: hidden;
-      background: var(--bg);
+      min-height: 100vh; overflow: hidden; background: var(--bg);
     }
     body::before {
       content: '';
@@ -29,8 +28,8 @@
       animation: pulse 8s ease-in-out infinite;
     }
     @keyframes pulse {
-      0%,100% { transform: scale(1); opacity:.7; }
-      50%      { transform: scale(1.1); opacity:1; }
+      0%,100% { transform:scale(1); opacity:.7; }
+      50%      { transform:scale(1.1); opacity:1; }
     }
     .auth-wrapper {
       position: relative; z-index: 1;
@@ -74,26 +73,41 @@
       font-size:.875rem; display:none;
     }
     .notice.show { display:flex; align-items:flex-start; gap:.5rem; }
-    .notice-warn {
-      background:rgba(234,179,8,.08); border:1px solid rgba(234,179,8,.25);
-      color:#fde047;
-    }
-    .notice-info {
-      background:rgba(20,184,166,.08); border:1px solid rgba(20,184,166,.2);
-      color:#5eead4;
-    }
-    .notice-error {
-      background:rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.3);
-      color:#fca5a5;
-    }
+    .notice-warn  { background:rgba(234,179,8,.08);  border:1px solid rgba(234,179,8,.25);  color:#fde047; }
+    .notice-info  { background:rgba(20,184,166,.08); border:1px solid rgba(20,184,166,.2);  color:#5eead4; }
+    .notice-error { background:rgba(239,68,68,.1);   border:1px solid rgba(239,68,68,.3);   color:#fca5a5; }
     .auth-footer {
       text-align:center; padding:1rem 1.75rem;
       border-top:1px solid var(--border);
       font-size:.8125rem; color:var(--text-muted);
     }
+
+    /* Handoff overlay — shown briefly while passing session to another domain */
+    #handoff-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: var(--bg);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 1rem;
+      font-family: var(--mono);
+      color: var(--accent);
+      font-size: 1rem;
+      letter-spacing: .08em;
+    }
+    #handoff-overlay.show { display: flex; }
   </style>
 </head>
 <body>
+
+  <!-- Session handoff overlay -->
+  <div id="handoff-overlay">
+    <div class="sb-spinner" style="width:32px;height:32px;border-width:3px;"></div>
+    <span>Connecting…</span>
+  </div>
+
   <div class="auth-wrapper">
     <div class="auth-logo">
       <h1 id="logo-name">MYAPP</h1>
@@ -106,7 +120,7 @@
         <button class="auth-tab"        id="tab-signup" onclick="switchTab('signup')">Sign Up</button>
       </div>
 
-      <!-- Reason banner (shown via URL param) -->
+      <!-- Reason / error banner -->
       <div id="reason-banner" class="notice notice-error" style="margin:1rem 1.75rem 0;">
         <span>⚠</span><span id="reason-text"></span>
       </div>
@@ -124,10 +138,7 @@
           </label>
           <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
         </div>
-
         <button type="submit" class="btn btn-primary btn-full" id="btn-login">Sign In</button>
-
-        <!-- Shown after signup, or when account is pending -->
         <div id="pending-notice" class="notice notice-info">
           ✅ Account created! An admin must activate your account before you can sign in.
         </div>
@@ -171,42 +182,108 @@
     document.title = `Login — ${APP_NAME}`;
     document.getElementById('year').textContent = new Date().getFullYear();
 
-    // ── Reason banner ─────────────────────────────────────────
+    // ── Read URL params ───────────────────────────────────────
     const params = new URLSearchParams(location.search);
-    const reason = params.get('reason');
+    const reason  = params.get('reason');
+    const nextUrl = params.get('next'); // the app that sent the user here
+
+    // ── Reason banner ─────────────────────────────────────────
     if (reason) {
       const msgs = {
         inactive:        'Your account has been deactivated. Please contact an administrator.',
         forbidden:       'You do not have permission to access that page.',
-        session_invalid: 'This account is already active on another device. Contact M.Cole to negotiate your session privileges if you need access on this device.',
+        session_invalid: 'This account is already active on another device. Contact an administrator to reset your session if you need access on this device.',
         timeout:         'Your session expired. Please sign in again.',
       };
-      const text = msgs[reason] || 'Access denied.';
-      const banner = document.getElementById('reason-banner');
-      document.getElementById('reason-text').textContent = text;
-      banner.classList.add('show');
+      document.getElementById('reason-text').textContent = msgs[reason] || 'Access denied.';
+      document.getElementById('reason-banner').classList.add('show');
     }
 
-    // ── Redirect if already logged in and valid ───────────────
+    // ── Core redirect function ────────────────────────────────
+    //
+    //  Called after any successful login OR when the user is
+    //  already logged in and just passed through here.
+    //
+    //  If ?next= is present AND it's on a different domain →
+    //  do a session handoff: pass the access/refresh tokens
+    //  in the URL so the target domain can establish its own
+    //  local Supabase session.
+    //
+    //  If ?next= is on THIS domain or absent →
+    //  redirect normally (no token handoff needed).
+    //
+    async function redirectAfterLogin(profile) {
+      // Where does this user normally land on THIS domain?
+      const localDest = profile.role === 'admin' ? 'admin.html' : 'app.html';
+
+      if (!nextUrl) {
+        // No external app waiting — go to local destination
+        location.href = localDest;
+        return;
+      }
+
+      let targetUrl;
+      try { targetUrl = new URL(nextUrl); } catch(e) {
+        // Invalid URL — fall back to local
+        location.href = localDest;
+        return;
+      }
+
+      const isSameDomain = targetUrl.origin === location.origin;
+
+      if (isSameDomain) {
+        // Same domain — just redirect normally, session already shared
+        location.href = nextUrl;
+        return;
+      }
+
+      // Different domain — perform session handoff
+      // Show the "Connecting…" overlay while we prepare the handoff
+      document.getElementById('handoff-overlay').classList.add('show');
+
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) {
+        // Should not happen, but fall back gracefully
+        location.href = localDest;
+        return;
+      }
+
+      // Get the device token from localStorage to pass along
+      const deviceToken = localStorage.getItem(SESSION_TOKEN_KEY) || '';
+
+      // Append tokens to the target URL as query params
+      // The target's auth.js will absorb and clean these on arrival
+      const handoffUrl = new URL(nextUrl);
+      handoffUrl.searchParams.set('_at',   session.access_token);
+      handoffUrl.searchParams.set('_rt',   session.refresh_token);
+      if (deviceToken) {
+        handoffUrl.searchParams.set('_dt', deviceToken);
+      }
+
+      location.href = handoffUrl.toString();
+    }
+
+    // ── Auto-redirect if already logged in ───────────────────
     (async () => {
       const { session, profile } = await getSessionAndProfile();
       if (!session || !profile || !profile.is_active) return;
 
-      // Check device token before auto-redirecting
+      // Device token check
       if (profile.session_token) {
         const local = localStorage.getItem(SESSION_TOKEN_KEY);
-        if (local !== profile.session_token) return; // wrong device, stay on login
+        if (local !== profile.session_token) return;
       }
 
-      location.href = profile.role === 'admin' ? 'admin.html' : 'app.html';
+      // Already logged in — redirect (with handoff if needed)
+      await redirectAfterLogin(profile);
     })();
 
     // ── Tab switcher ──────────────────────────────────────────
     function switchTab(tab) {
-      document.getElementById('form-login').classList.toggle('hidden',   tab !== 'login');
-      document.getElementById('form-signup').classList.toggle('hidden',  tab !== 'signup');
-      document.getElementById('tab-login').classList.toggle('active',    tab === 'login');
-      document.getElementById('tab-signup').classList.toggle('active',   tab === 'signup');
+      document.getElementById('form-login').classList.toggle('hidden',  tab !== 'login');
+      document.getElementById('form-signup').classList.toggle('hidden', tab !== 'signup');
+      document.getElementById('tab-login').classList.toggle('active',   tab === 'login');
+      document.getElementById('tab-signup').classList.toggle('active',  tab === 'signup');
       document.getElementById('reason-banner').classList.remove('show');
     }
 
@@ -220,7 +297,7 @@
       btn.disabled = true;
       btn.innerHTML = '<span class="sb-spinner"></span> Signing in…';
 
-      // Step 1 — authenticate with Supabase
+      // Step 1 — authenticate
       const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
       if (error) {
         showToast(error.message, 'error');
@@ -230,11 +307,7 @@
 
       // Step 2 — fetch profile
       const { data: profile, error: profErr } = await sb
-        .from('profiles')
-        .select('*')
-        .eq('id', data.user.id)
-        .single();
-
+        .from('profiles').select('*').eq('id', data.user.id).single();
       if (profErr || !profile) {
         await sb.auth.signOut();
         showToast('Could not load your profile. Contact an admin.', 'error');
@@ -251,30 +324,16 @@
       }
 
       // Step 4 — single device check
-      //
-      //  Case A: no token in Supabase yet (fresh account or admin reset)
-      //          → this is the first / newly authorised login.
-      //          → generate a token, save to Supabase and localStorage.
-      //
-      //  Case B: token exists in Supabase AND matches localStorage
-      //          → same device logging in again. Allow it.
-      //
-      //  Case C: token exists in Supabase but does NOT match localStorage
-      //          → a different device is trying to log in. Reject.
-
       const localToken = localStorage.getItem(SESSION_TOKEN_KEY);
 
       if (!profile.session_token) {
-        // Case A — claim this device
+        // Case A — no device claimed yet, claim this one
         const newToken = crypto.randomUUID();
-        const { error: updateErr } = await sb
-          .from('profiles')
-          .update({
-            session_token: newToken,
-            last_login_at: new Date().toISOString(),
-            updated_at:    new Date().toISOString()
-          })
-          .eq('id', profile.id);
+        const { error: updateErr } = await sb.from('profiles').update({
+          session_token: newToken,
+          last_login_at: new Date().toISOString(),
+          updated_at:    new Date().toISOString()
+        }).eq('id', profile.id);
 
         if (updateErr) {
           await sb.auth.signOut();
@@ -282,35 +341,29 @@
           btn.disabled = false; btn.textContent = 'Sign In';
           return;
         }
-
         localStorage.setItem(SESSION_TOKEN_KEY, newToken);
+        profile.session_token = newToken;
 
       } else if (localToken === profile.session_token) {
-        // Case B — same device, just update last_login_at
+        // Case B — same device logging in again
         await sb.from('profiles').update({
           last_login_at: new Date().toISOString()
         }).eq('id', profile.id);
 
       } else {
-        // Case C — different device, reject immediately
+        // Case C — different device, reject
         await sb.auth.signOut();
         showToast('This account is already active on another device.', 'error');
-
-        // Show the detailed banner too
-        const banner = document.getElementById('reason-banner');
         document.getElementById('reason-text').textContent =
           'This account is already active on another device. Contact an administrator to reset your session if you need access on this device.';
-        banner.classList.add('show');
-
+        document.getElementById('reason-banner').classList.add('show');
         btn.disabled = false; btn.textContent = 'Sign In';
         return;
       }
 
-      // Step 5 — all checks passed, redirect
+      // Step 5 — all good, redirect
       showToast('Signed in!', 'success');
-      setTimeout(() => {
-        location.href = profile.role === 'admin' ? 'admin.html' : 'app.html';
-      }, 600);
+      setTimeout(() => redirectAfterLogin(profile), 600);
     }
 
     // ── SIGN UP ───────────────────────────────────────────────
