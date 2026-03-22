@@ -2460,7 +2460,7 @@ function pad(n){return String(n).padStart(2,'0');}
 // Boot
 // document.addEventListener('DOMContentLoaded',init);
   document.addEventListener('DOMContentLoaded', async () => {
-  const result = await requireAuth('index.html');
+  const result = await requireAppAccess('mcq', 'index.html');
   if (!result) return;
 
   document.getElementById('page-loader').remove(); // ← reveal the app
