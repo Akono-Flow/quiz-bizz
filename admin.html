@@ -6,180 +6,231 @@
   <title>Admin — MyApp</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
+    /* ── Layout ── */
     .admin-layout {
       display: grid;
       grid-template-columns: 220px 1fr;
       min-height: calc(100vh - 57px);
     }
-
-    /* Sidebar */
     .admin-sidebar {
       background: var(--surface);
       border-right: 1px solid var(--border);
       padding: 1.5rem 0;
-      position: sticky;
-      top: 57px;
+      position: sticky; top: 57px;
       height: calc(100vh - 57px);
       overflow-y: auto;
     }
-    .sidebar-section {
-      padding: 0 1rem;
-      margin-bottom: 1.5rem;
-    }
+    .sidebar-section { padding: 0 1rem; margin-bottom: 1.5rem; }
     .sidebar-label {
-      font-family: var(--mono);
-      font-size: .65rem;
-      text-transform: uppercase;
-      letter-spacing: .1em;
-      color: var(--text-muted);
-      padding: 0 .5rem;
-      margin-bottom: .5rem;
+      font-family: var(--mono); font-size: .65rem;
+      text-transform: uppercase; letter-spacing: .1em;
+      color: var(--text-muted); padding: 0 .5rem; margin-bottom: .5rem;
     }
     .sidebar-link {
-      display: flex;
-      align-items: center;
-      gap: .6rem;
-      padding: .5rem .75rem;
-      border-radius: 8px;
-      font-size: .9rem;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: background .2s, color .2s;
-      border: none;
-      background: none;
-      width: 100%;
-      text-align: left;
+      display: flex; align-items: center; gap: .6rem;
+      padding: .5rem .75rem; border-radius: 8px;
+      font-size: .9rem; color: var(--text-muted);
+      cursor: pointer; transition: background .2s, color .2s;
+      border: none; background: none; width: 100%; text-align: left;
     }
     .sidebar-link:hover, .sidebar-link.active {
-      background: rgba(20,184,166,.1);
-      color: var(--accent);
+      background: rgba(20,184,166,.1); color: var(--accent);
     }
+    .admin-main { padding: 2rem; overflow-y: auto; min-width: 0; }
 
-    /* Main area */
-    .admin-main { padding: 2rem; overflow-y: auto; }
-
-    /* Stats */
+    /* ── Stat cards ── */
     .admin-stats {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2rem;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1rem; margin-bottom: 2rem;
     }
     .admin-stat {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1.1rem 1.25rem;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.1rem 1.25rem;
     }
-    .admin-stat .as-label {
-      font-family: var(--mono);
-      font-size: .68rem;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      color: var(--text-muted);
+    .as-label {
+      font-family: var(--mono); font-size: .68rem;
+      text-transform: uppercase; letter-spacing: .08em;
+      color: var(--text-muted); margin-bottom: .3rem;
     }
-    .admin-stat .as-value {
-      font-size: 1.75rem;
-      font-weight: 600;
-      line-height: 1.2;
-    }
+    .as-value { font-size: 1.75rem; font-weight: 600; line-height: 1.2; }
 
-    /* User table card */
+    /* ── Table card ── */
     .table-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); overflow: hidden;
+      margin-bottom: 1.5rem;
     }
     .table-toolbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      padding: 1rem 1.25rem;
-      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+      justify-content: space-between; gap: 1rem;
+      padding: 1rem 1.25rem; border-bottom: 1px solid var(--border);
       flex-wrap: wrap;
     }
     .table-toolbar h2 {
-      font-family: var(--mono);
-      font-size: .85rem;
-      letter-spacing: .06em;
-      color: var(--text);
+      font-family: var(--mono); font-size: .85rem;
+      letter-spacing: .06em; color: var(--text);
     }
-    .search-input-wrap {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
-    .search-input-wrap input {
-      padding-left: 2.2rem;
-      width: 220px;
-      font-size: .875rem;
-    }
-    .search-icon {
-      position: absolute; left: .75rem;
-      color: var(--text-muted);
-      pointer-events: none;
-    }
+    .search-wrap { position: relative; display: flex; align-items: center; }
+    .search-wrap input { padding-left: 2.2rem; width: 200px; font-size: .875rem; }
+    .search-icon { position: absolute; left: .75rem; color: var(--text-muted); pointer-events: none; font-size: 14px; }
 
-    .user-name-cell { font-weight: 500; color: var(--text); }
-    .user-email-cell { font-size: .82rem; color: var(--text-muted); font-family: var(--mono); }
+    .empty-state { text-align: center; padding: 3rem; color: var(--text-muted); font-size: .875rem; }
 
-    .toggle-btn {
-      font-size: .78rem;
-      padding: .3rem .75rem;
-    }
-
-    /* Edit role inline */
-    .role-select {
-      font-size: .8rem;
-      padding: .25rem .6rem;
-      width: auto;
-    }
-
-    /* Empty state */
-    .empty-state {
-      text-align: center;
-      padding: 3rem;
-      color: var(--text-muted);
-      font-size: .9rem;
-    }
-
-    /* Confirm overlay */
-    #confirm-overlay {
+    /* ── Inline form (add/edit) ── */
+    .inline-form {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin: 0 1.25rem 1.25rem;
       display: none;
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,.7);
-      z-index: 500;
-      align-items: center;
-      justify-content: center;
+    }
+    .inline-form.open { display: block; }
+    .inline-form h3 {
+      font-family: var(--mono); font-size: .78rem;
+      letter-spacing: .08em; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 1rem;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: .85rem;
+      margin-bottom: 1rem;
+    }
+    .form-grid .form-group { margin: 0; }
+    .form-actions { display: flex; gap: .6rem; }
+
+    /* ── Plan cards grid ── */
+    .plans-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1rem;
+    }
+    .plan-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      transition: border-color .2s;
+    }
+    .plan-card:hover { border-color: var(--border2); }
+    .plan-card-header {
+      padding: 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: .5rem;
+    }
+    .plan-name {
+      font-family: var(--mono); font-size: .95rem;
+      font-weight: 700; color: var(--text);
+    }
+    .plan-price {
+      font-size: .8rem; color: var(--text-muted); margin-top: .2rem;
+    }
+    .plan-desc {
+      font-size: .8rem; color: var(--text-muted);
+      margin-top: .4rem; line-height: 1.5;
+    }
+    .plan-badge {
+      font-family: var(--mono); font-size: .65rem;
+      padding: .2rem .6rem; border-radius: 999px;
+      background: rgba(20,184,166,.1);
+      border: 1px solid rgba(20,184,166,.2);
+      color: var(--accent);
+      white-space: nowrap;
+    }
+    .plan-card-body { padding: 1rem 1.25rem; }
+    .plan-app-list { list-style: none; display: flex; flex-direction: column; gap: .4rem; }
+    .plan-app-item {
+      font-size: .8rem; color: var(--text-muted);
+      display: flex; align-items: center; gap: .5rem;
+    }
+    .plan-app-item::before {
+      content: ''; display: inline-block;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent); flex-shrink: 0; opacity: .6;
+    }
+    .plan-no-apps { font-size: .8rem; color: var(--text-muted); font-style: italic; }
+    .plan-card-footer {
+      padding: .85rem 1.25rem;
+      border-top: 1px solid var(--border);
+      display: flex; gap: .5rem;
+    }
+
+    /* ── App assignment panel ── */
+    .assign-panel {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+      display: none;
+    }
+    .assign-panel.open { display: block; }
+    .assign-panel h3 {
+      font-family: var(--mono); font-size: .78rem;
+      text-transform: uppercase; letter-spacing: .08em;
+      color: var(--accent); margin-bottom: 1rem;
+    }
+    .app-checkboxes {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: .5rem;
+      margin-bottom: 1rem;
+    }
+    .app-check-item {
+      display: flex; align-items: center; gap: .6rem;
+      padding: .6rem .85rem;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: border-color .2s;
+    }
+    .app-check-item:hover { border-color: var(--accent); }
+    .app-check-item input[type=checkbox] {
+      width: 15px; height: 15px;
+      accent-color: var(--accent);
+      cursor: pointer; flex-shrink: 0;
+    }
+    .app-check-item label {
+      font-size: .85rem; cursor: pointer;
+      display: flex; flex-direction: column; gap: .1rem;
+    }
+    .app-check-slug {
+      font-family: var(--mono); font-size: .7rem;
+      color: var(--text-muted);
+    }
+
+    /* ── Confirm overlay ── */
+    #confirm-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.7); z-index: 500;
+      align-items: center; justify-content: center;
     }
     #confirm-overlay.show { display: flex; }
     .confirm-box {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 2rem;
-      max-width: 380px;
-      width: calc(100% - 2rem);
-      animation: fadeUp .2s ease;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 2rem; max-width: 380px;
+      width: calc(100% - 2rem); animation: fadeUp .2s ease;
     }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
     .confirm-box h3 { margin-bottom: .5rem; }
     .confirm-box p  { color: var(--text-muted); font-size: .9rem; margin-bottom: 1.5rem; }
     .confirm-actions { display: flex; gap: .75rem; justify-content: flex-end; }
 
+    /* Plan-select dropdown in users table */
+    .plan-select { font-size: .8rem; padding: .25rem .6rem; width: auto; }
+
     @media (max-width: 768px) {
       .admin-layout { grid-template-columns: 1fr; }
-      .admin-sidebar {
-        display: none; /* simplify on mobile; can add a hamburger later */
-      }
+      .admin-sidebar { display: none; }
       .admin-main { padding: 1rem; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Loading overlay -->
   <div id="page-loader">
     <div class="loader-inner">
       <div class="loader-logo" id="loader-logo">MYAPP</div>
@@ -187,39 +238,37 @@
     </div>
   </div>
 
-  <!-- Header -->
   <header class="page-header">
     <span class="logo" id="header-logo">MYAPP</span>
     <div class="user-info">
       <span style="font-family:var(--mono);font-size:.75rem;color:var(--accent)">ADMIN</span>
       <span id="admin-email-display">—</span>
-      <a href="app.html" class="btn btn-ghost btn-sm">← App</a>
       <button class="btn btn-ghost btn-sm" onclick="signOut()">Sign Out</button>
     </div>
   </header>
 
-  <!-- Admin layout -->
   <div class="admin-layout" id="admin-layout" style="display:none;">
 
     <!-- Sidebar -->
     <aside class="admin-sidebar">
       <div class="sidebar-section">
         <div class="sidebar-label">Manage</div>
-        <button class="sidebar-link active" onclick="showPanel('users')">👥 Users</button>
-        <button class="sidebar-link" onclick="showPanel('settings')">⚙ App Settings</button>
+        <button class="sidebar-link active" id="nav-users" onclick="showPanel('users')">👥 Users</button>
+        <button class="sidebar-link"        id="nav-apps"  onclick="showPanel('apps')">🧩 Apps</button>
+        <button class="sidebar-link"        id="nav-plans" onclick="showPanel('plans')">📋 Plans</button>
       </div>
       <div class="sidebar-section">
-        <div class="sidebar-label">Links</div>
-        <button class="sidebar-link" onclick="window.open('https://supabase.com/dashboard','_blank')">🔗 Supabase Dashboard</button>
-        <button class="sidebar-link" onclick="window.open('https://github.com','_blank')">🔗 GitHub Repo</button>
+        <div class="sidebar-label">External</div>
+        <button class="sidebar-link" onclick="window.open('https://supabase.com/dashboard','_blank')">🔗 Supabase</button>
+        <button class="sidebar-link" onclick="window.open('https://github.com','_blank')">🔗 GitHub</button>
       </div>
     </aside>
 
     <!-- Main -->
     <main class="admin-main">
 
-      <!-- Stats -->
-      <div class="admin-stats" id="admin-stats">
+      <!-- Stats row (always visible) -->
+      <div class="admin-stats">
         <div class="admin-stat">
           <div class="as-label">Total Users</div>
           <div class="as-value" id="stat-total">—</div>
@@ -233,31 +282,37 @@
           <div class="as-value" id="stat-inactive" style="color:var(--red)">—</div>
         </div>
         <div class="admin-stat">
-          <div class="as-label">Admins</div>
-          <div class="as-value" id="stat-admins" style="color:var(--accent)">—</div>
+          <div class="as-label">Apps</div>
+          <div class="as-value" id="stat-apps" style="color:var(--accent)">—</div>
+        </div>
+        <div class="admin-stat">
+          <div class="as-label">Plans</div>
+          <div class="as-value" id="stat-plans" style="color:var(--yellow)">—</div>
         </div>
       </div>
 
-      <!-- PANEL: Users -->
+      <!-- ══════════════════════════════════════════════
+           PANEL: USERS
+      ══════════════════════════════════════════════ -->
       <div id="panel-users">
         <div class="table-card">
           <div class="table-toolbar">
             <h2>USER MANAGEMENT</h2>
             <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;">
-              <div class="search-input-wrap">
+              <div class="search-wrap">
                 <span class="search-icon">🔍</span>
-                <input type="text" id="search-input" placeholder="Search users…" oninput="filterUsers()">
+                <input type="text" id="user-search" placeholder="Search users…" oninput="filterUsers()">
               </div>
-              <button class="btn btn-primary btn-sm" onclick="loadUsers()">↺ Refresh</button>
+              <button class="btn btn-primary btn-sm" onclick="loadAll()">↺ Refresh</button>
             </div>
           </div>
-
           <div style="overflow-x:auto;">
-            <table class="data-table" id="users-table">
+            <table class="data-table">
               <thead>
                 <tr>
                   <th>Name</th>
                   <th>Email</th>
+                  <th>Plan</th>
                   <th>Role</th>
                   <th>Status</th>
                   <th>Joined</th>
@@ -265,22 +320,119 @@
                 </tr>
               </thead>
               <tbody id="users-tbody">
-                <tr><td colspan="6" class="empty-state">Loading users…</td></tr>
+                <tr><td colspan="7" class="empty-state">Loading…</td></tr>
               </tbody>
             </table>
           </div>
         </div>
       </div>
 
-      <!-- PANEL: Settings -->
-      <div id="panel-settings" style="display:none;">
-        <div class="card">
-          <p class="section-title">App Settings</p>
-          <p style="color:var(--text-muted); font-size:.9rem;">
-            Add your application settings here. For now, edit
-            <code style="color:var(--accent)">js/config.js</code> to change
-            <code>APP_NAME</code> and other globals.
-          </p>
+      <!-- ══════════════════════════════════════════════
+           PANEL: APPS
+      ══════════════════════════════════════════════ -->
+      <div id="panel-apps" style="display:none;">
+        <div class="table-card">
+          <div class="table-toolbar">
+            <h2>APP REGISTRY</h2>
+            <button class="btn btn-primary btn-sm" onclick="toggleAppForm()">+ Add App</button>
+          </div>
+
+          <!-- Add/Edit form -->
+          <div class="inline-form" id="app-form">
+            <h3 id="app-form-title">Add New App</h3>
+            <input type="hidden" id="app-form-id">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>App Name</label>
+                <input type="text" id="app-form-name" placeholder="e.g. Chemistry MCQ">
+              </div>
+              <div class="form-group">
+                <label>Slug <span style="color:var(--text-muted);font-size:.75rem;">(used in requireAppAccess)</span></label>
+                <input type="text" id="app-form-slug" placeholder="e.g. mcq" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9-_]/g,'')">
+              </div>
+              <div class="form-group">
+                <label>URL <span style="color:var(--text-muted);font-size:.75rem;">(optional)</span></label>
+                <input type="text" id="app-form-url" placeholder="https://…/mcq.html">
+              </div>
+              <div class="form-group">
+                <label>Description <span style="color:var(--text-muted);font-size:.75rem;">(optional)</span></label>
+                <input type="text" id="app-form-desc" placeholder="Short description">
+              </div>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-primary btn-sm" onclick="saveApp()">Save App</button>
+              <button class="btn btn-ghost btn-sm" onclick="closeAppForm()">Cancel</button>
+            </div>
+          </div>
+
+          <div style="overflow-x:auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Slug</th>
+                  <th>URL</th>
+                  <th>Status</th>
+                  <th>In Plans</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="apps-tbody">
+                <tr><td colspan="6" class="empty-state">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════
+           PANEL: PLANS
+      ══════════════════════════════════════════════ -->
+      <div id="panel-plans" style="display:none;">
+
+        <!-- Add plan form -->
+        <div class="table-card" style="margin-bottom:1.5rem;">
+          <div class="table-toolbar">
+            <h2>PLANS</h2>
+            <button class="btn btn-primary btn-sm" onclick="togglePlanForm()">+ New Plan</button>
+          </div>
+          <div class="inline-form" id="plan-form">
+            <h3 id="plan-form-title">Create Plan</h3>
+            <input type="hidden" id="plan-form-id">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Plan Name</label>
+                <input type="text" id="plan-form-name" placeholder="e.g. Student">
+              </div>
+              <div class="form-group">
+                <label>Price (per month)</label>
+                <input type="number" id="plan-form-price" placeholder="0" min="0" step="0.01">
+              </div>
+              <div class="form-group" style="grid-column:1/-1;">
+                <label>Description</label>
+                <input type="text" id="plan-form-desc" placeholder="Short description of what this plan includes">
+              </div>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-primary btn-sm" onclick="savePlan()">Save Plan</button>
+              <button class="btn btn-ghost btn-sm" onclick="closePlanForm()">Cancel</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- App assignment panel -->
+        <div class="assign-panel" id="assign-panel">
+          <h3>ASSIGN APPS TO: <span id="assign-plan-name" style="color:var(--text)">—</span></h3>
+          <div class="app-checkboxes" id="assign-checkboxes"></div>
+          <div class="form-actions">
+            <button class="btn btn-primary btn-sm" onclick="saveAssignments()">Save Changes</button>
+            <button class="btn btn-ghost btn-sm" onclick="closeAssignPanel()">Cancel</button>
+          </div>
+        </div>
+
+        <!-- Plan cards -->
+        <div class="plans-grid" id="plans-grid">
+          <div style="color:var(--text-muted);font-size:.875rem;">Loading plans…</div>
         </div>
       </div>
 
@@ -290,16 +442,15 @@
   <!-- Confirm dialog -->
   <div id="confirm-overlay">
     <div class="confirm-box">
-      <h3 id="confirm-title">Confirm Action</h3>
+      <h3 id="confirm-title">Confirm</h3>
       <p id="confirm-msg"></p>
       <div class="confirm-actions">
-        <button class="btn btn-ghost" onclick="closeConfirm()">Cancel</button>
-        <button class="btn btn-danger" id="confirm-ok-btn" onclick="confirmAction()">Confirm</button>
+        <button class="btn btn-ghost"  onclick="closeConfirm()">Cancel</button>
+        <button class="btn btn-danger" id="confirm-ok" onclick="confirmAction()">Confirm</button>
       </div>
     </div>
   </div>
 
-  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/config.js"></script>
   <script src="js/auth.js"></script>
@@ -308,12 +459,14 @@
     document.getElementById('loader-logo').textContent = APP_NAME.toUpperCase();
     document.title = `Admin — ${APP_NAME}`;
 
-    let allUsers   = [];
-    let pendingAction = null;  // { type, userId, value }
+    // ── State ────────────────────────────────────────────────
+    let allUsers = [], allApps = [], allPlans = [], planApps = {};
+    let pendingAction = null;
+    let assigningPlanId = null;
 
     // ── Init ─────────────────────────────────────────────────
     (async () => {
-      const result = await requireAdmin('app.html');
+      const result = await requireAdmin('index.html');
       if (!result) return;
 
       document.getElementById('admin-email-display').textContent = result.session.user.email;
@@ -323,161 +476,483 @@
       loader.classList.add('hidden');
       setTimeout(() => loader.remove(), 500);
 
-      await loadUsers();
+      await loadAll();
     })();
 
-    // ── Panel switcher ────────────────────────────────────────
-    function showPanel(name) {
-      document.getElementById('panel-users').style.display    = name === 'users'    ? 'block' : 'none';
-      document.getElementById('panel-settings').style.display = name === 'settings' ? 'block' : 'none';
-      document.querySelectorAll('.sidebar-link').forEach((el,i) => {
-        el.classList.toggle('active', (name === 'users' && i===0) || (name === 'settings' && i===1));
-      });
+    // ── Load everything ───────────────────────────────────────
+    async function loadAll() {
+      await Promise.all([loadUsers(), loadApps(), loadPlans()]);
+      updateStats();
     }
 
-    // ── Load all users ────────────────────────────────────────
+    // ── USERS ─────────────────────────────────────────────────
     async function loadUsers() {
-      document.getElementById('users-tbody').innerHTML =
-        '<tr><td colspan="6" class="empty-state">Loading…</td></tr>';
-
       const { data, error } = await sb
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        showToast('Error loading users: ' + error.message, 'error');
-        return;
-      }
-
+      if (error) { showToast('Error loading users', 'error'); return; }
       allUsers = data || [];
-      updateStats();
       renderUsers(allUsers);
     }
 
-    // ── Update stat cards ─────────────────────────────────────
-    function updateStats() {
-      document.getElementById('stat-total').textContent   = allUsers.length;
-      document.getElementById('stat-active').textContent  = allUsers.filter(u=>u.is_active).length;
-      document.getElementById('stat-inactive').textContent= allUsers.filter(u=>!u.is_active).length;
-      document.getElementById('stat-admins').textContent  = allUsers.filter(u=>u.role==='admin').length;
-    }
-
-    // ── Render table rows ─────────────────────────────────────
     function renderUsers(users) {
       const tbody = document.getElementById('users-tbody');
       if (!users.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No users found.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No users found.</td></tr>';
         return;
       }
+      tbody.innerHTML = users.map(u => {
+        const planOptions = allPlans.map(p =>
+          `<option value="${p.id}" ${u.plan_id === p.id ? 'selected' : ''}>${esc(p.name)}</option>`
+        ).join('');
 
-      tbody.innerHTML = users.map(u => `
-        <tr id="row-${u.id}">
-          <td class="user-name-cell">${escHtml(u.full_name || '—')}</td>
-          <td class="user-email-cell">${escHtml(u.email)}</td>
+        return `
+        <tr>
+          <td style="font-weight:500">${esc(u.full_name || '—')}</td>
+          <td style="font-family:var(--mono);font-size:.8rem;color:var(--text-muted)">${esc(u.email)}</td>
           <td>
-            <select class="role-select" onchange="setRole('${u.id}', this.value)">
-              <option value="user"  ${u.role==='user'  ? 'selected' : ''}>user</option>
-              <option value="admin" ${u.role==='admin' ? 'selected' : ''}>admin</option>
+            <select class="plan-select" onchange="setUserPlan('${u.id}', this.value)">
+              <option value="">— No plan —</option>
+              ${planOptions}
             </select>
           </td>
           <td>
-            <span class="badge badge-${u.is_active ? 'active' : 'inactive'}">
-              ${u.is_active ? '● Active' : '○ Inactive'}
+            <select class="role-select" style="font-size:.8rem;padding:.25rem .6rem;width:auto;" onchange="setUserRole('${u.id}', this.value)">
+              <option value="user"  ${u.role==='user'  ?'selected':''}>user</option>
+              <option value="admin" ${u.role==='admin' ?'selected':''}>admin</option>
+            </select>
+          </td>
+          <td>
+            <span class="badge badge-${u.is_active?'active':'inactive'}">
+              ${u.is_active?'● Active':'○ Inactive'}
             </span>
           </td>
-          <td style="color:var(--text-muted);font-size:.82rem;">
+          <td style="font-size:.8rem;color:var(--text-muted)">
             ${new Date(u.created_at).toLocaleDateString()}
           </td>
           <td>
-            <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
-              <button
-                class="btn btn-sm ${u.is_active ? 'btn-danger' : 'btn-success'} toggle-btn"
-                onclick="confirmToggle('${u.id}', ${u.is_active}, '${escHtml(u.email)}')">
-                ${u.is_active ? 'Deactivate' : 'Activate'}
-              </button>
-              <button class="btn btn-ghost btn-sm" onclick="confirmDelete('${u.id}', '${escHtml(u.email)}')">
-                🗑
+            <div style="display:flex;gap:.4rem;">
+              <button class="btn btn-sm ${u.is_active?'btn-danger':'btn-success'}"
+                onclick="confirmToggleUser('${u.id}',${u.is_active},'${esc(u.email)}')">
+                ${u.is_active?'Deactivate':'Activate'}
               </button>
             </div>
           </td>
-        </tr>
-      `).join('');
+        </tr>`;
+      }).join('');
     }
 
-    // ── Filter by search ──────────────────────────────────────
     function filterUsers() {
-      const q = document.getElementById('search-input').value.toLowerCase();
-      const filtered = allUsers.filter(u =>
+      const q = document.getElementById('user-search').value.toLowerCase();
+      renderUsers(allUsers.filter(u =>
         (u.full_name||'').toLowerCase().includes(q) ||
         (u.email||'').toLowerCase().includes(q)
-      );
-      renderUsers(filtered);
+      ));
     }
 
-    // ── Toggle active ─────────────────────────────────────────
-    function confirmToggle(userId, currentActive, email) {
-      const action = currentActive ? 'deactivate' : 'activate';
-      document.getElementById('confirm-title').textContent = `${action.charAt(0).toUpperCase() + action.slice(1)} User`;
-      document.getElementById('confirm-msg').textContent   = `Are you sure you want to ${action} "${email}"?`;
-      document.getElementById('confirm-ok-btn').className  = currentActive ? 'btn btn-danger' : 'btn btn-success';
-      document.getElementById('confirm-ok-btn').textContent = action.charAt(0).toUpperCase() + action.slice(1);
-      pendingAction = { type: 'toggle', userId, value: !currentActive };
+    async function setUserPlan(userId, planId) {
+      const val = planId || null;
+      const { error } = await sb.from('profiles').update({ plan_id: val }).eq('id', userId);
+      if (error) { showToast('Failed to update plan', 'error'); return; }
+      showToast('Plan updated', 'success');
+      const u = allUsers.find(u => u.id === userId);
+      if (u) u.plan_id = val;
+    }
+
+    async function setUserRole(userId, role) {
+      const { error } = await sb.from('profiles').update({ role }).eq('id', userId);
+      if (error) { showToast('Failed to update role', 'error'); return; }
+      showToast(`Role set to "${role}"`, 'success');
+    }
+
+    function confirmToggleUser(userId, current, email) {
+      const action = current ? 'deactivate' : 'activate';
+      document.getElementById('confirm-title').textContent = `${cap(action)} User`;
+      document.getElementById('confirm-msg').textContent   = `${cap(action)} "${email}"?`;
+      document.getElementById('confirm-ok').className      = current ? 'btn btn-danger' : 'btn btn-success';
+      document.getElementById('confirm-ok').textContent    = cap(action);
+      pendingAction = { type: 'toggleUser', userId, value: !current };
       document.getElementById('confirm-overlay').classList.add('show');
     }
 
-    async function doToggle(userId, newActive) {
-      const { error } = await sb
-        .from('profiles')
-        .update({ is_active: newActive, updated_at: new Date().toISOString() })
-        .eq('id', userId);
-
-      if (error) { showToast('Update failed: ' + error.message, 'error'); return; }
-      showToast(`User ${newActive ? 'activated' : 'deactivated'}.`, newActive ? 'success' : 'warn');
-      await loadUsers();
+    async function doToggleUser(userId, val) {
+      const { error } = await sb.from('profiles').update({ is_active: val }).eq('id', userId);
+      if (error) { showToast('Update failed', 'error'); return; }
+      showToast(val ? 'User activated' : 'User deactivated', val ? 'success' : 'warn');
+      await loadUsers(); updateStats();
     }
 
-    // ── Set role ──────────────────────────────────────────────
-    async function setRole(userId, newRole) {
-      const { error } = await sb
-        .from('profiles')
-        .update({ role: newRole, updated_at: new Date().toISOString() })
-        .eq('id', userId);
+    // ── APPS ──────────────────────────────────────────────────
+    async function loadApps() {
+      const { data, error } = await sb
+        .from('apps')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-      if (error) { showToast('Role update failed: ' + error.message, 'error'); return; }
-      showToast(`Role changed to "${newRole}".`, 'success');
-      const u = allUsers.find(u => u.id === userId);
-      if (u) u.role = newRole;
+      if (error) { showToast('Error loading apps', 'error'); return; }
+      allApps = data || [];
+      renderApps();
+    }
+
+    function renderApps() {
+      const tbody = document.getElementById('apps-tbody');
+      if (!allApps.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No apps registered yet. Click "+ Add App" to get started.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = allApps.map(a => {
+        // Count how many plans include this app
+        const inPlans = allPlans.filter(p =>
+          (planApps[p.id] || []).includes(a.id)
+        ).length;
+
+        return `
+        <tr>
+          <td style="font-weight:500">${esc(a.name)}</td>
+          <td>
+            <span style="font-family:var(--mono);font-size:.78rem;
+              background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.18);
+              color:var(--accent);padding:.2rem .6rem;border-radius:999px;">
+              ${esc(a.slug)}
+            </span>
+          </td>
+          <td style="font-size:.8rem;color:var(--text-muted);max-width:200px;
+            overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+            ${a.url ? `<a href="${esc(a.url)}" target="_blank" style="color:var(--accent)">${esc(a.url)}</a>` : '—'}
+          </td>
+          <td>
+            <span class="badge badge-${a.is_active?'active':'inactive'}">
+              ${a.is_active?'● Active':'○ Inactive'}
+            </span>
+          </td>
+          <td style="font-family:var(--mono);font-size:.8rem;color:var(--text-muted)">
+            ${inPlans} plan${inPlans!==1?'s':''}
+          </td>
+          <td>
+            <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
+              <button class="btn btn-ghost btn-sm" onclick="editApp('${a.id}')">Edit</button>
+              <button class="btn btn-ghost btn-sm" onclick="toggleAppActive('${a.id}',${a.is_active})">
+                ${a.is_active?'Disable':'Enable'}
+              </button>
+              <button class="btn btn-ghost btn-sm" onclick="confirmDeleteApp('${a.id}','${esc(a.name)}')">🗑</button>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    function toggleAppForm() {
+      const form = document.getElementById('app-form');
+      if (form.classList.contains('open')) {
+        closeAppForm();
+      } else {
+        clearAppForm();
+        form.classList.add('open');
+        document.getElementById('app-form-name').focus();
+      }
+    }
+
+    function closeAppForm() {
+      document.getElementById('app-form').classList.remove('open');
+    }
+
+    function clearAppForm() {
+      document.getElementById('app-form-id').value   = '';
+      document.getElementById('app-form-name').value = '';
+      document.getElementById('app-form-slug').value = '';
+      document.getElementById('app-form-url').value  = '';
+      document.getElementById('app-form-desc').value = '';
+      document.getElementById('app-form-title').textContent = 'Add New App';
+    }
+
+    function editApp(appId) {
+      const a = allApps.find(a => a.id === appId);
+      if (!a) return;
+      document.getElementById('app-form-id').value   = a.id;
+      document.getElementById('app-form-name').value = a.name;
+      document.getElementById('app-form-slug').value = a.slug;
+      document.getElementById('app-form-url').value  = a.url || '';
+      document.getElementById('app-form-desc').value = a.description || '';
+      document.getElementById('app-form-title').textContent = 'Edit App';
+      document.getElementById('app-form').classList.add('open');
+      document.getElementById('app-form-name').focus();
+      showPanel('apps');
+    }
+
+    async function saveApp() {
+      const id   = document.getElementById('app-form-id').value;
+      const name = document.getElementById('app-form-name').value.trim();
+      const slug = document.getElementById('app-form-slug').value.trim();
+      const url  = document.getElementById('app-form-url').value.trim();
+      const desc = document.getElementById('app-form-desc').value.trim();
+
+      if (!name) { showToast('App name is required', 'error'); return; }
+      if (!slug) { showToast('Slug is required', 'error'); return; }
+
+      const payload = { name, slug, url: url||null, description: desc||null };
+
+      if (id) {
+        const { error } = await sb.from('apps').update(payload).eq('id', id);
+        if (error) { showToast(error.message, 'error'); return; }
+        showToast('App updated', 'success');
+      } else {
+        const { error } = await sb.from('apps').insert(payload);
+        if (error) { showToast(error.message, 'error'); return; }
+        showToast('App added', 'success');
+      }
+
+      closeAppForm();
+      await loadApps();
       updateStats();
     }
 
-    // ── Delete user ───────────────────────────────────────────
-    function confirmDelete(userId, email) {
-      document.getElementById('confirm-title').textContent  = 'Delete User';
-      document.getElementById('confirm-msg').textContent    = `Permanently delete "${email}"? This cannot be undone.`;
-      document.getElementById('confirm-ok-btn').className   = 'btn btn-danger';
-      document.getElementById('confirm-ok-btn').textContent = 'Delete';
-      pendingAction = { type: 'delete', userId };
+    async function toggleAppActive(appId, current) {
+      const { error } = await sb.from('apps').update({ is_active: !current }).eq('id', appId);
+      if (error) { showToast('Update failed', 'error'); return; }
+      showToast(`App ${current?'disabled':'enabled'}`, 'success');
+      await loadApps();
+    }
+
+    function confirmDeleteApp(appId, name) {
+      document.getElementById('confirm-title').textContent = 'Delete App';
+      document.getElementById('confirm-msg').textContent   = `Delete "${name}"? It will be removed from all plans.`;
+      document.getElementById('confirm-ok').className      = 'btn btn-danger';
+      document.getElementById('confirm-ok').textContent    = 'Delete';
+      pendingAction = { type: 'deleteApp', appId };
       document.getElementById('confirm-overlay').classList.add('show');
     }
 
-    async function doDelete(userId) {
-      // NOTE: Deleting from auth.users requires a service-role key (server-side).
-      // This deletes the profile row. The auth user remains but cannot access the app.
-      // For full deletion, use a Supabase Edge Function or the dashboard.
-      const { error } = await sb.from('profiles').delete().eq('id', userId);
-      if (error) { showToast('Delete failed: ' + error.message, 'error'); return; }
-      showToast('Profile deleted. Auth account still exists in Supabase — remove it from the dashboard if needed.', 'warn');
-      await loadUsers();
+    async function doDeleteApp(appId) {
+      const { error } = await sb.from('apps').delete().eq('id', appId);
+      if (error) { showToast('Delete failed', 'error'); return; }
+      showToast('App deleted', 'success');
+      await loadApps(); updateStats();
+    }
+
+    // ── PLANS ─────────────────────────────────────────────────
+    async function loadPlans() {
+      const [plansRes, planAppsRes] = await Promise.all([
+        sb.from('plans').select('*').order('price'),
+        sb.from('plan_apps').select('plan_id, app_id')
+      ]);
+
+      if (plansRes.error) { showToast('Error loading plans', 'error'); return; }
+      allPlans = plansRes.data || [];
+
+      // Build planApps lookup: { plan_id: [app_id, ...] }
+      planApps = {};
+      for (const row of (planAppsRes.data || [])) {
+        if (!planApps[row.plan_id]) planApps[row.plan_id] = [];
+        planApps[row.plan_id].push(row.app_id);
+      }
+
+      renderPlans();
+      // Re-render apps because "In Plans" count depends on planApps
+      renderApps();
+    }
+
+    function renderPlans() {
+      const grid = document.getElementById('plans-grid');
+      if (!allPlans.length) {
+        grid.innerHTML = '<div style="color:var(--text-muted);font-size:.875rem">No plans yet.</div>';
+        return;
+      }
+
+      grid.innerHTML = allPlans.map(p => {
+        const appIds = planApps[p.id] || [];
+        const includedApps = allApps.filter(a => appIds.includes(a.id));
+        const priceLabel = p.price > 0 ? `$${Number(p.price).toFixed(2)}/mo` : 'Free';
+
+        const appListHtml = includedApps.length
+          ? includedApps.map(a => `<li class="plan-app-item">${esc(a.name)}</li>`).join('')
+          : '<span class="plan-no-apps">No apps assigned</span>';
+
+        return `
+        <div class="plan-card" id="plan-card-${p.id}">
+          <div class="plan-card-header">
+            <div>
+              <div class="plan-name">${esc(p.name)}</div>
+              <div class="plan-price">${priceLabel}</div>
+              ${p.description ? `<div class="plan-desc">${esc(p.description)}</div>` : ''}
+            </div>
+            <span class="plan-badge">${includedApps.length} app${includedApps.length!==1?'s':''}</span>
+          </div>
+          <div class="plan-card-body">
+            <ul class="plan-app-list">${appListHtml}</ul>
+          </div>
+          <div class="plan-card-footer">
+            <button class="btn btn-ghost btn-sm" onclick="openAssignPanel('${p.id}')">Manage Apps</button>
+            <button class="btn btn-ghost btn-sm" onclick="editPlan('${p.id}')">Edit</button>
+            <button class="btn btn-ghost btn-sm" onclick="confirmDeletePlan('${p.id}','${esc(p.name)}')">🗑</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function togglePlanForm() {
+      const form = document.getElementById('plan-form');
+      if (form.classList.contains('open')) {
+        closePlanForm();
+      } else {
+        clearPlanForm();
+        form.classList.add('open');
+        document.getElementById('plan-form-name').focus();
+      }
+    }
+
+    function closePlanForm() {
+      document.getElementById('plan-form').classList.remove('open');
+    }
+
+    function clearPlanForm() {
+      document.getElementById('plan-form-id').value    = '';
+      document.getElementById('plan-form-name').value  = '';
+      document.getElementById('plan-form-price').value = '';
+      document.getElementById('plan-form-desc').value  = '';
+      document.getElementById('plan-form-title').textContent = 'Create Plan';
+    }
+
+    function editPlan(planId) {
+      const p = allPlans.find(p => p.id === planId);
+      if (!p) return;
+      document.getElementById('plan-form-id').value    = p.id;
+      document.getElementById('plan-form-name').value  = p.name;
+      document.getElementById('plan-form-price').value = p.price;
+      document.getElementById('plan-form-desc').value  = p.description || '';
+      document.getElementById('plan-form-title').textContent = 'Edit Plan';
+      document.getElementById('plan-form').classList.add('open');
+    }
+
+    async function savePlan() {
+      const id    = document.getElementById('plan-form-id').value;
+      const name  = document.getElementById('plan-form-name').value.trim();
+      const price = parseFloat(document.getElementById('plan-form-price').value) || 0;
+      const desc  = document.getElementById('plan-form-desc').value.trim();
+
+      if (!name) { showToast('Plan name is required', 'error'); return; }
+
+      const payload = { name, price, description: desc || null };
+
+      if (id) {
+        const { error } = await sb.from('plans').update(payload).eq('id', id);
+        if (error) { showToast(error.message, 'error'); return; }
+        showToast('Plan updated', 'success');
+      } else {
+        const { error } = await sb.from('plans').insert(payload);
+        if (error) { showToast(error.message, 'error'); return; }
+        showToast('Plan created', 'success');
+      }
+
+      closePlanForm();
+      await loadPlans();
+      updateStats();
+    }
+
+    function confirmDeletePlan(planId, name) {
+      document.getElementById('confirm-title').textContent = 'Delete Plan';
+      document.getElementById('confirm-msg').textContent   = `Delete plan "${name}"? Users on this plan will lose access.`;
+      document.getElementById('confirm-ok').className      = 'btn btn-danger';
+      document.getElementById('confirm-ok').textContent    = 'Delete';
+      pendingAction = { type: 'deletePlan', planId };
+      document.getElementById('confirm-overlay').classList.add('show');
+    }
+
+    async function doDeletePlan(planId) {
+      const { error } = await sb.from('plans').delete().eq('id', planId);
+      if (error) { showToast('Delete failed', 'error'); return; }
+      showToast('Plan deleted', 'success');
+      await loadPlans(); await loadUsers(); updateStats();
+    }
+
+    // ── App assignment panel ──────────────────────────────────
+    function openAssignPanel(planId) {
+      assigningPlanId = planId;
+      const plan       = allPlans.find(p => p.id === planId);
+      const currentIds = planApps[planId] || [];
+
+      document.getElementById('assign-plan-name').textContent = plan ? plan.name : '?';
+
+      const container = document.getElementById('assign-checkboxes');
+      if (!allApps.length) {
+        container.innerHTML = '<p style="color:var(--text-muted);font-size:.875rem">No apps registered yet.</p>';
+      } else {
+        container.innerHTML = allApps.map(a => `
+          <label class="app-check-item">
+            <input type="checkbox"
+              id="assign-check-${a.id}"
+              value="${a.id}"
+              ${currentIds.includes(a.id) ? 'checked' : ''}>
+            <label for="assign-check-${a.id}">
+              ${esc(a.name)}
+              <span class="app-check-slug">${esc(a.slug)}</span>
+            </label>
+          </label>
+        `).join('');
+      }
+
+      document.getElementById('assign-panel').classList.add('open');
+      document.getElementById('assign-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function closeAssignPanel() {
+      document.getElementById('assign-panel').classList.remove('open');
+      assigningPlanId = null;
+    }
+
+    async function saveAssignments() {
+      if (!assigningPlanId) return;
+
+      const checked = [...document.querySelectorAll('#assign-checkboxes input:checked')]
+        .map(el => el.value);
+
+      // Delete all existing for this plan then re-insert
+      const { error: delErr } = await sb
+        .from('plan_apps')
+        .delete()
+        .eq('plan_id', assigningPlanId);
+
+      if (delErr) { showToast('Save failed: ' + delErr.message, 'error'); return; }
+
+      if (checked.length) {
+        const rows = checked.map(appId => ({ plan_id: assigningPlanId, app_id: appId }));
+        const { error: insErr } = await sb.from('plan_apps').insert(rows);
+        if (insErr) { showToast('Save failed: ' + insErr.message, 'error'); return; }
+      }
+
+      showToast('App assignments saved', 'success');
+      closeAssignPanel();
+      await loadPlans();
+    }
+
+    // ── Stats ─────────────────────────────────────────────────
+    function updateStats() {
+      document.getElementById('stat-total').textContent   = allUsers.length;
+      document.getElementById('stat-active').textContent  = allUsers.filter(u => u.is_active).length;
+      document.getElementById('stat-inactive').textContent= allUsers.filter(u => !u.is_active).length;
+      document.getElementById('stat-apps').textContent    = allApps.length;
+      document.getElementById('stat-plans').textContent   = allPlans.length;
+    }
+
+    // ── Panel switcher ────────────────────────────────────────
+    function showPanel(name) {
+      ['users','apps','plans'].forEach(p => {
+        document.getElementById(`panel-${p}`).style.display = p === name ? 'block' : 'none';
+        document.getElementById(`nav-${p}`).classList.toggle('active', p === name);
+      });
     }
 
     // ── Confirm dialog ────────────────────────────────────────
     async function confirmAction() {
       closeConfirm();
       if (!pendingAction) return;
-      if (pendingAction.type === 'toggle') await doToggle(pendingAction.userId, pendingAction.value);
-      if (pendingAction.type === 'delete') await doDelete(pendingAction.userId);
+      const a = pendingAction;
       pendingAction = null;
+      if (a.type === 'toggleUser')  await doToggleUser(a.userId, a.value);
+      if (a.type === 'deleteApp')   await doDeleteApp(a.appId);
+      if (a.type === 'deletePlan')  await doDeletePlan(a.planId);
     }
     function closeConfirm() {
       document.getElementById('confirm-overlay').classList.remove('show');
@@ -486,12 +961,12 @@
       if (e.target === e.currentTarget) closeConfirm();
     });
 
-    // ── Utility ───────────────────────────────────────────────
-    function escHtml(str) {
-      return String(str)
-        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    // ── Utilities ─────────────────────────────────────────────
+    function esc(str) {
+      return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;')
         .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
+    function cap(str) { return str.charAt(0).toUpperCase() + str.slice(1); }
   </script>
 </body>
 </html>
