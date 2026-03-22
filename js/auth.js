@@ -58,6 +58,7 @@ async function requireAdmin(redirectTo = 'app.html') {
 //  the app with the given slug.
 //
 async function requireAppAccess(appSlug, noAccessPage = 'no-access.html') {
+  // Not logged in → always send to login page
   const result = await requireAuth('index.html');
   if (!result) return null;
 
@@ -68,7 +69,7 @@ async function requireAppAccess(appSlug, noAccessPage = 'no-access.html') {
 
   // User has no plan assigned
   if (!profile.plan_id) {
-    location.href = redirectTo + '?reason=no_plan';
+    location.href = noAccessPage + '?reason=no_plan';
     return null;
   }
 
@@ -81,7 +82,7 @@ async function requireAppAccess(appSlug, noAccessPage = 'no-access.html') {
     .single();
 
   if (appErr || !app) {
-    location.href = redirectTo + '?reason=app_unavailable';
+    location.href = noAccessPage + '?reason=app_unavailable';
     return null;
   }
 
@@ -94,12 +95,8 @@ async function requireAppAccess(appSlug, noAccessPage = 'no-access.html') {
     .maybeSingle();
 
   if (!access) {
-    // Pass the app name so the no-access page can show it
-    const params = new URLSearchParams({
-      reason: 'no_access',
-      app: app.name
-    });
-    location.href = redirectTo + '?' + params.toString();
+    const params = new URLSearchParams({ reason: 'no_access', app: app.name });
+    location.href = noAccessPage + '?' + params.toString();
     return null;
   }
 
